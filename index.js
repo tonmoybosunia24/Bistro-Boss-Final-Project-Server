@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const bodyParser = require('body-parser');
+const nodeMailer = require('nodemailer');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -9,6 +11,7 @@ const port = process.env.PORT || 5000;
 // MiddleWare
 app.use(cors());
 app.use(express.json())
+app.use(bodyParser.json())
 
 // MongoDB Connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4vklw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -38,6 +41,35 @@ async function run() {
                      const result = await reviewsCollections.find().toArray();
                      res.send(result)
               })
+
+              // Email Sending
+              app.post("/send-email", async (req, res) => {
+                     const { name, email, phone, message } = req.body;
+
+                     // Nodemailer transporter তৈরি
+                     const transporter = nodeMailer.createTransport({
+                            service: "gmail",
+                            auth: {
+                                   user: process.env.EMAIL_USER,
+                                   pass: process.env.EMAIL_PASS,
+                            },
+                     });
+
+                     // Email কনফিগার
+                     const mailOptions = {
+                            from: email,
+                            to: process.env.EMAIL_USER,
+                            subject: "New Contact Form Submission",
+                            text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+                     };
+
+                     try {
+                            await transporter.sendMail(mailOptions);
+                            res.status(200).json({ success: true, message: "Email sent successfully!" });
+                     } catch (error) {
+                            res.status(500).json({ success: false, message: "Failed to send email", error });
+                     }
+              });
 
               // Send a ping to confirm a successful connection
               await client.db("admin").command({ ping: 1 });
