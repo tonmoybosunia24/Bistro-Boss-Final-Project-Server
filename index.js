@@ -32,6 +32,7 @@ async function run() {
               // Connect to the MongoDB Database
               const menuCollections = client.db('Final-Project').collection('menu')
               const reviewsCollections = client.db('Final-Project').collection('reviews')
+              const cartsCollections = client.db('Final-Project').collection('carts')
 
               app.get('/menu', async (req, res) => {
                      const result = await menuCollections.find().toArray();
@@ -41,6 +42,21 @@ async function run() {
                      const result = await reviewsCollections.find().toArray();
                      res.send(result)
               })
+
+              // Add to Cart Collections
+
+              app.get('/cart', async (req, res) => {
+                     const email = req.query.email;
+                     const query = { email: email }
+                     const result = await cartsCollections.find(query).toArray();
+                     res.send(result)
+              })
+              app.post('/cart', async (req, res) => {
+                     const cartItem = req.body;
+                     const result = await cartsCollections.insertOne(cartItem);
+                     res.send(result)
+              })
+
 
               // Email Sending
               app.post("/send-email", async (req, res) => {
