@@ -30,10 +30,20 @@ async function run() {
               await client.connect();
 
               // Connect to the MongoDB Database
+              const userCollections = client.db('Final-Project').collection('users')
               const menuCollections = client.db('Final-Project').collection('menu')
               const reviewsCollections = client.db('Final-Project').collection('reviews')
               const cartsCollections = client.db('Final-Project').collection('carts')
 
+
+              // Users Collection Apis
+              app.post('/users', async (req, res) => {
+                     const user = req.body;
+                     const result = await userCollections.insertOne(user);
+                     res.send(result);
+              })
+
+              // Collections Api
               app.get('/menu', async (req, res) => {
                      const result = await menuCollections.find().toArray();
                      res.send(result)
