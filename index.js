@@ -38,6 +38,7 @@ async function run() {
               const reviewsCollections = client.db('Final-Project').collection('reviews')
               const cartsCollections = client.db('Final-Project').collection('carts')
               const paymentCollections = client.db('Final-Project').collection('payments')
+              const reservationCollections = client.db('Final-Project').collection('reservations')
 
 
               // Jwt Token Related APi
@@ -225,6 +226,22 @@ async function run() {
                      }
                      const deleteResult = await cartsCollections.deleteMany(query)
                      res.send({ paymentResult, deleteResult })
+              })
+
+
+              // Reservation Related APi
+              app.get('/reservation/:email', verifyToken, async (req, res) => {
+                     const query = { email: req.params.email }
+                     if (req.params.email != req.decoded.email) {
+                            return res.status(403).send({ message: 'Forbidden Access' })
+                     }
+                     const result = await reservationCollections.find(query).toArray();
+                     res.send(result)
+              })
+              app.post('/reservation', async (req, res) => {
+                     const reservation = req.body;
+                     const result = await reservationCollections.insertOne(reservation)
+                     res.send(result)
               })
 
 
