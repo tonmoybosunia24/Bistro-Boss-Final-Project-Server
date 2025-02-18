@@ -253,6 +253,23 @@ async function run() {
                      })
               })
 
+              // User Stats Or Analytics
+
+              app.get('/user-stats/:email', verifyToken, async (req, res) => {
+                     const email = req.params.email;
+                     const totalOrders = await paymentCollections.countDocuments({ email });
+                     const totalPayments = await paymentCollections.countDocuments({ email });
+                     const totalReviews = await reviewsCollections.countDocuments({ email });
+                     const totalBookings = await reservationCollections.countDocuments({ email });
+                     console.log(totalReviews)
+                     res.send({
+                            totalOrders,
+                            totalPayments,
+                            totalReviews,
+                            totalBookings
+                     })
+              })
+
               // Using Aggregate Pipeline
               app.get('/order-stats', verifyToken, verifyAdmin, async (req, res) => {
                      try {
