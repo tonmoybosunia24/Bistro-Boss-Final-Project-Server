@@ -228,6 +228,89 @@ async function run() {
                      res.send({ paymentResult, deleteResult })
               })
 
+              // Admin Stats Or Analytics
+              app.get('/admin-stats', verifyToken, verifyAdmin, async (req, res) => {
+
+                     const users = await userCollections.estimatedDocumentCount();
+                     const menuItems = await menuCollections.estimatedDocumentCount();
+                     const orders = await paymentCollections.estimatedDocumentCount();
+
+                     const result = await paymentCollections.aggregate([
+                            {
+                                   $group: {
+                                          _id: null,
+                                          totalRevenue: { $sum: '$price' }
+                                   }
+                            }
+                     ]).toArray()
+                     const revenue = result.length > 0 ? result[0].totalRevenue : 0;
+
+                     res.send({
+                            users,
+                            menuItems,
+                            orders,
+                            revenue
+                     })
+              })
+
+              // Using Aggregate Pipeline
+              app.get('/order-stats', verifyToken, verifyAdmin, async (req, res) => {
+                     try {
+                            const result = await paymentCollections.aggregate([
+                                   {
+                                          $addFields: {
+                                                 menuItemIds: {
+                                                        $map: {
+                                                               input: "$menuItemIds",
+                                                               as: "id",
+                                                               in: { $toObjectId: "$$id" }
+                                                        }
+                                                 }
+                                          }
+                                   },
+                                   {
+                                          $lookup: {
+                                                 from: 'menu',
+                                                 localField: 'menuItemIds',
+                                                 foreignField: '_id',
+                                                 as: 'menuItems'
+                                          }
+                                   },
+                                   {
+                                          $unwind: {
+                                                 path: "$menuItems",
+                                                 preserveNullAndEmptyArrays: true
+                                          }
+                                   },
+                                   {
+                                          $group: {
+                                                 _id: "$menuItems.category",
+                                                 category: { $first: "$menuItems.category" },
+                                                 quantity: { $sum: 1 },
+                                                 revenue: { $sum: "$menuItems.price" }
+                                          }
+                                   },
+                                   {
+                                          $match: { category: { $ne: null } },
+                                   },
+                                   {
+                                          $project: {
+                                                 _id: 0,
+                                                 category: 1,
+                                                 quantity: 1,
+                                                 revenue: 1
+                                          }
+                                   }
+                            ]).toArray();
+
+                            res.send(result);
+                     } catch (error) {
+                            console.error("Error fetching order stats:", error);
+                            res.status(500).send({ error: "Internal Server Error" });
+                     }
+              });
+
+
 
               // Reservation Related APi
               app.get('/reservation/:email', verifyToken, async (req, res) => {
