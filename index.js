@@ -171,6 +171,11 @@ async function run() {
                      const result = await reviewsCollections.find().toArray();
                      res.send(result)
               })
+              app.post('/reviews', async (req, res) => {
+                     const reviewItem = req.body;
+                     const result = await reviewsCollections.insertOne(reviewItem)
+                     res.send(result)
+              })
 
               // Add to Cart Collections
 
@@ -330,6 +335,10 @@ async function run() {
 
 
               // Reservation Related APi
+              app.get('/reservation', async (req, res) => {
+                     const result = await reservationCollections.find().toArray();
+                     res.send(result)
+              })
               app.get('/reservation/:email', verifyToken, async (req, res) => {
                      const query = { email: req.params.email }
                      if (req.params.email != req.decoded.email) {
@@ -343,6 +352,13 @@ async function run() {
                      const result = await reservationCollections.insertOne(reservation)
                      res.send(result)
               })
+              app.patch("/reservation/:id", async (req, res) => {
+                     const id = req.params.id;
+                     const filter = { _id: new ObjectId(id) };
+                     const updateDoc = { $set: { status: "Done" } };
+                     const result = await reservationCollections.updateOne(filter, updateDoc);
+                     res.send(result);
+              });
 
 
               // Email Sending
