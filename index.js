@@ -266,7 +266,6 @@ async function run() {
                      const totalPayments = await paymentCollections.countDocuments({ email });
                      const totalReviews = await reviewsCollections.countDocuments({ email });
                      const totalBookings = await reservationCollections.countDocuments({ email });
-                     console.log(totalReviews)
                      res.send({
                             totalOrders,
                             totalPayments,
